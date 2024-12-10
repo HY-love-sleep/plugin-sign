@@ -3,6 +3,7 @@ package com.cubigdata.plugin.sign.handler;
 import cn.hutool.json.JSONUtil;
 import com.cubigdata.expos.framework.core.exception.BusinessException;
 import com.cubigdata.expos.framework.core.wrapper.BufferedHttpRequestWrapper;
+import com.cubigdata.expos.framework.nacos.NacosConfigHelper;
 import com.cubigdata.plugin.sign.common.constant.SignConstant;
 import com.cubigdata.plugin.sign.common.dto.SignDTO;
 import com.cubigdata.plugin.sign.common.enums.SignTypeEnum;
@@ -15,6 +16,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.SortedMap;
 import java.util.stream.Collectors;
@@ -24,9 +26,10 @@ import java.util.stream.Collectors;
 public class CommonSignHandler implements SignHandler, InitializingBean {
     @Value("${sign.nonce}")
     private Boolean enableNonce;
-    // todo: 这里的redisTemplate 需要使用集成项目自带的
-    @Autowired
+    @Resource(name = "signRedisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private NacosConfigHelper nacosConfigUtil;
     private static final String NONCE_KEY = "SIGN_NONCE_KEY:";
     /**
      * 1. 对除签名外的所有请求参数按key做升序排列，value无需编码。（假设当前时间戳是1251234334，有三个参数，c=1,b=2,a=3,加上时间戳之后，

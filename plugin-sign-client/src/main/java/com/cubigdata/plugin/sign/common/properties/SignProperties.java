@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "expos.sign")
+@ConfigurationProperties(prefix = "sign")
 public class SignProperties {
     // 默认不开启nonce校验
     private Boolean nonce = false;

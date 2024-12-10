@@ -24,13 +24,13 @@ import java.util.Map;
  */
 @Slf4j
 public class SignCacheInitializer implements CommandLineRunner {
-    @Resource
+    @Resource(name = "signRedisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
     NacosConfigHelper nacosConfigUtil;
     @Override
     public void run(String... args) throws Exception {
-        log.info("===================签名模块开始缓存appKey->appSecurity的关系=========================");
+        log.info("=============签名模块开始缓存appKey->appSecurity的关系==================");
         String signInfoConfigStr = nacosConfigUtil.getConfigStrByCode(SignConstant.SIGN_INFO, SignConstant.DICT_GROUP);
 
         List list = JacksonUtil.jsonToObj(signInfoConfigStr, List.class);

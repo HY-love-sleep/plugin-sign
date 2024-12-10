@@ -30,6 +30,7 @@
         <commons-collections4.version>4.4</commons-collections4.version>
         <gson.version>2.10.1</gson.version>
         <guava.version>19.0</guava.version>
+        <logback.version>1.2.11</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -84,6 +85,17 @@
                 <artifactId>expos-framework-nacos</artifactId>
                 <version>${expos-framework.version}</version>
             </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cubigdata.expos.opensource</groupId>
+                <artifactId>expos-component-http-client</artifactId>
+                <version>${expos-framework.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

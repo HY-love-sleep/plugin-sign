@@ -1,8 +1,12 @@
 package com.cubigdata.plugin.sign.filter;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.cubigdata.expos.framework.core.response.BaseResult;
+import com.cubigdata.expos.framework.core.util.JacksonUtil;
 import com.cubigdata.expos.framework.core.wrapper.BufferedHttpRequestWrapper;
+import com.cubigdata.expos.framework.nacos.NacosConfigHelper;
 import com.cubigdata.expos.framework.utils.ResponseWriter;
 import com.cubigdata.expos.framework.utils.UriMatcher;
 import com.cubigdata.plugin.sign.annotation.Appoint;
@@ -16,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,28 +32,34 @@ import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 
-import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-@Slf4j
+
 @Order(1)
+@Slf4j
 public class SignFilter extends OncePerRequestFilter {
+    private final RedisTemplate redisTemplate;
+    private final SignHttp signHttp;
 
-    @Resource
-    private SignHttp signHttp;
-    @Resource
-    private SignProperties signProperties;
-    @Autowired(required = false)
-    private ServerProperties serverProperties;
-    @Resource
-    private RedisTemplate<String, Object> redisTemplate;
-
+    private final SignProperties signProperties;
+    private final ServerProperties serverProperties;
+    private final WebApplicationContext applicationContext;
+    private final NacosConfigHelper nacosConfigUtil;
     @Autowired
-    private WebApplicationContext applicationContext;
+    public SignFilter(@Qualifier("signRedisTemplate") RedisTemplate<String, Object> redisTemplate, SignHttp signHttp, SignProperties signProperties, @Autowired(required = false) ServerProperties serverProperties, WebApplicationContext applicationContext, NacosConfigHelper nacosConfigUtil) {
+        this.redisTemplate = redisTemplate;
+        this.signHttp = signHttp;
+        this.signProperties = signProperties;
+        this.serverProperties = serverProperties;
+        this.applicationContext = applicationContext;
+        this.nacosConfigUtil = nacosConfigUtil;
+    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -83,8 +94,8 @@ public class SignFilter extends OncePerRequestFilter {
         @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         BaseResult result = new BaseResult();
-        result.setCode(-9900);
-        result.setMsg("报文签名解析失败");
+        result.setCode(-9999);
+        result.setMsg("报文签名验证失败");
         result.setData(null);
 
         String appKey = request.getHeader(SignConstant.APP_KEY);
@@ -98,10 +109,9 @@ public class SignFilter extends OncePerRequestFilter {
         try {
             signInfo = (SignDTO) redisTemplate.opsForValue().get(SignConstant.SYS_SIGN_CACHE_KEY + appKey);
             if (null == signInfo) {
-                signInfo = signHttp.getSignInfoByAppKey(appKey);
+                signInfo = getConfigByAppKey(appKey);
                 if (null == signInfo) {
                     log.error("无法获取签名验证信息");
-                    // 没有颁发过这个appKey
                     ResponseWriter.write(response, JSONUtil.toJsonStr(result));
                     return;
                 } else {
@@ -146,4 +156,21 @@ public class SignFilter extends OncePerRequestFilter {
         return false;
     }
 
+    private SignDTO getConfigByAppKey(String appKey) {
+        String signInfoConfigStr = nacosConfigUtil.getConfigStrByCode(SignConstant.SIGN_INFO, SignConstant.DICT_GROUP);
+        if (StringUtils.isEmpty(signInfoConfigStr)) {
+            return null;
+        }
+        List list = JacksonUtil.jsonToObj(signInfoConfigStr, List.class);
+        if (CollUtil.isEmpty(list)) {
+            return null;
+        }
+        for (Object sign : list) {
+            Map<String, Object> objectMap = BeanUtil.beanToMap(sign);
+            if (String.valueOf(objectMap.get(SignConstant.APP_KEY)).equals(appKey)) {
+                return BeanUtil.toBean(objectMap, SignDTO.class);
+            }
+        }
+        return null;
+    }
 }

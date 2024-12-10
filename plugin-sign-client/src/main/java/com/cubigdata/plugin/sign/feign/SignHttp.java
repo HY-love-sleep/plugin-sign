@@ -10,5 +10,4 @@ public interface SignHttp {
 
     @GetMapping("/sign/appKey")
     SignDTO getSignInfoByAppKey(@RequestParam("appKey") String appKey);
-
 }

@@ -1,7 +1,14 @@
 package com.cubigdata.plugin.sign.utils;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import cn.hutool.json.JSONNull;
 import cn.hutool.json.JSONUtil;
+import com.cubigdata.expos.framework.core.util.JacksonUtil;
+import com.cubigdata.expos.framework.nacos.NacosConfigHelper;
+import com.cubigdata.plugin.sign.common.constant.SignConstant;
+import com.cubigdata.plugin.sign.common.dto.SignDTO;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
@@ -34,14 +41,14 @@ public class SignUtil {
             throw new RuntimeException("timestamp 不能为空");
         }
         long parseLong = Long.parseLong(timestamp);
-        if (System.currentTimeMillis() - parseLong > 18000000L) {
+        if (System.currentTimeMillis() - parseLong > 300000L) {
             log.error("请求时间超过五分钟， 拒绝请求");
             throw new RuntimeException("请求超过5分钟， 不进行处理");
         }
         result.put("timestamp", decodeValue(timestamp));
         Map<String, String> urlParams = getUrlParams(request);
         if (CollectionUtils.isNotEmpty(urlParams.entrySet())) {
-            Map<String, String> filteredUrlParams = (Map<String, String>)urlParams.entrySet().stream().filter(entry -> (entry.getValue() != null)).collect(Collectors.toMap(Map.Entry::getKey, entry -> decodeValue((String)entry.getValue())));
+            Map<String, String> filteredUrlParams = (Map<String, String>) urlParams.entrySet().stream().filter(entry -> (entry.getValue() != null)).collect(Collectors.toMap(Map.Entry::getKey, entry -> decodeValue((String) entry.getValue())));
             result.putAll(flattenParams(filteredUrlParams, ""));
         }
         Map<String, String> allRequestParam = Maps.newHashMap();

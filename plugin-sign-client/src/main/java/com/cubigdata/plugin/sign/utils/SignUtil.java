@@ -35,7 +35,10 @@ public class SignUtil {
 
     public static SortedMap<String, Object> getAllParams(HttpServletRequest request) throws IOException {
         SortedMap<String, Object> result = new TreeMap<>();
-        result.put("appKey", decodeValue(request.getHeader("appKey")));
+        result.put(SignConstant.APP_KEY, decodeValue(request.getHeader("appKey")));
+        if (null != request.getHeader(SignConstant.NONCE)) {
+            result.put(SignConstant.NONCE, request.getHeader(SignConstant.NONCE));
+        }
         String timestamp = request.getHeader("timestamp");
         if (StringUtils.isEmpty(timestamp)) {
             throw new RuntimeException("timestamp 不能为空");

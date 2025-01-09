@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -40,7 +41,8 @@ import javax.annotation.Resource;
 @Slf4j
 @AutoConfigureBefore(SignFilter.class)
 public class SignConfig implements InitializingBean {
-    @Resource(name = "signRedisTemplate")
+    @Autowired
+    @Qualifier("signRedisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private SignHttp signHttp;
@@ -60,7 +62,6 @@ public class SignConfig implements InitializingBean {
     }
 
     @Bean(name = "signRedisTemplate")
-    @Lazy
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);

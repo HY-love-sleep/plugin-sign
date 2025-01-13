@@ -81,7 +81,7 @@ public class CommonSignHandler implements SignHandler, InitializingBean {
     }
 
     public String buildSignature(SortedMap<String, Object> param, String appSecret) {
-        log.debug("组装前-" + JSONUtil.toJsonStr(param) + "-" + appSecret);
+        log.info("组装前-" + JSONUtil.toJsonStr(param) + "-" + appSecret);
 
         // 将所有值转换为字符串
         String trim = param.entrySet().stream()
@@ -90,7 +90,7 @@ public class CommonSignHandler implements SignHandler, InitializingBean {
                 .trim()
                 .concat("&appSecret=" + appSecret);
         trim = trim.replace("\"null\"", "null");
-        log.debug("签名组装参数字符串: {}", trim);
+        log.info("签名组装参数字符串: {}", trim);
         return DigestUtils.md5DigestAsHex(trim.getBytes()).toUpperCase();
     }
 

@@ -64,12 +64,12 @@ public class SignFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!signProperties.getEnabled()) {
-            log.debug("sign filter is not enabled");
+            log.info("sign filter is not enabled");
             return true;
         }
         if (CollectionUtils.isEmpty(signProperties.getUris())) {
-            log.debug("sign uri not configured");
-            return true;
+            log.info("sign uri not configured");
+            return false;
         }
         String requestURI = request.getRequestURI();
         String contextPath = null;
@@ -78,12 +78,12 @@ public class SignFilter extends OncePerRequestFilter {
         }
         Boolean match = UriMatcher.match(contextPath, requestURI, signProperties.getUris());
         if (match) {
-            log.debug("该接口设置为不经过签名校验, pass :{}", requestURI);
+            log.info("该接口设置为不经过签名校验, pass :{}", requestURI);
             return true;
         }
         // 兼容common-components TokenFilter中的签名逻辑
         if (isAppointAnnotated(request)) {
-            log.debug("该接口被 @Appoint 注解修饰, sign pass :{}", requestURI);
+            log.info("该接口被 @Appoint 注解修饰, sign pass :{}", requestURI);
             return true;
         }
         return false;

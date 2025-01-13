@@ -148,7 +148,23 @@ public class SignUtil {
         while ((str = reader.readLine()) != null) {
             wholeStr.append(decodeValue(str));
         }
-        return (Map<String, String>)JSONUtil.toBean(wholeStr.toString(), Map.class);
+        String requestBody = wholeStr.toString();
+
+        // 检查请求体是否为 JSON 数组
+        if (requestBody.startsWith("[") && requestBody.endsWith("]")) {
+            // 请求体是 JSON 数组
+            Map<String, String> resultMap = new HashMap<>();
+            resultMap.put("array", requestBody);
+            return resultMap;
+        } else {
+            // 请求体是 JSON 对象
+            Map<String, Object> objectMap = JSONUtil.toBean(requestBody, Map.class);
+            Map<String, String> stringMap = new HashMap<>();
+            for (Map.Entry<String, Object> entry : objectMap.entrySet()) {
+                stringMap.put(entry.getKey(), entry.getValue().toString());
+            }
+            return stringMap;
+        }
     }
 
     public static Map<String, String> getUrlParams(HttpServletRequest request) {

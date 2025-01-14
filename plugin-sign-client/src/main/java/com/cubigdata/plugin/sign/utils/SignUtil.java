@@ -16,7 +16,9 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpMethod;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -33,7 +35,7 @@ import java.util.stream.Collectors;
 public class SignUtil {
 
 
-    public static SortedMap<String, Object> getAllParams(HttpServletRequest request) throws IOException {
+    public static SortedMap<String, Object> getAllParams(HttpServletRequest request) throws IOException, ServletException {
         SortedMap<String, Object> result = new TreeMap<>();
         result.put(SignConstant.APP_KEY, decodeValue(request.getHeader("appKey")));
         if (null != request.getHeader(SignConstant.NONCE)) {
@@ -54,12 +56,28 @@ public class SignUtil {
             Map<String, String> filteredUrlParams = (Map<String, String>) urlParams.entrySet().stream().filter(entry -> (entry.getValue() != null)).collect(Collectors.toMap(Map.Entry::getKey, entry -> decodeValue((String) entry.getValue())));
             result.putAll(flattenParams(filteredUrlParams, ""));
         }
-        Map<String, String> allRequestParam = Maps.newHashMap();
-        if (!HttpMethod.GET.name().equals(request.getMethod())) {
-            allRequestParam = getAllRequestParam(request);
-        }
-        if (allRequestParam != null) {
-            result.putAll(flattenParams(allRequestParam, ""));
+        // 检查请求的内容类型是否为 multipart/form-data
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.startsWith("multipart/form-data")) {
+            // 处理 multipart/form-data 请求
+            for (Part part : request.getParts()) {
+                if (part.getContentType() != null) {
+                    log.info("忽略文件参数: {}", part.getName());
+                } else {
+                    // 将普通参数添加到结果中
+                    String paramName = part.getName();
+                    String paramValue = request.getParameter(paramName);
+                    if (paramValue != null) {
+                        result.put(paramName, decodeValue(paramValue));
+                    }
+                }
+            }
+        } else {
+            // 正常处理非 multipart/form-data 请求
+            Map<String, String> allRequestParam = getAllRequestParam(request);
+            if (allRequestParam != null) {
+                result.putAll(flattenParams(allRequestParam, ""));
+            }
         }
         return result;
     }

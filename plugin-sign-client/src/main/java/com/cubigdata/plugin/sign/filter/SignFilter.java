@@ -36,6 +36,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,32 @@ public class SignFilter extends OncePerRequestFilter {
         if (isAppointAnnotated(request)) {
             log.info("该接口被 @Appoint 注解修饰, sign pass :{}", requestURI);
             return true;
+        }
+        // 检查请求内容类型是否为 multipart/form-data
+        String contentType = request.getContentType();
+        if (contentType != null && contentType.startsWith("multipart/form-data")) {
+            try {
+                boolean hasNonFileParams = false;
+                boolean hasFileParams = false;
+
+                for (Part part : request.getParts()) {
+                    if (part.getContentType() != null) {
+                        // 如果是文件部分，设置标志为 true
+                        hasFileParams = true;
+                    } else {
+                        // 如果是普通参数，设置标志为 true
+                        hasNonFileParams = true;
+                    }
+                }
+
+                // 如果只有文件参数，没有其他类型的参数，返回 true
+                if (hasFileParams && !hasNonFileParams) {
+                    log.info("请求中只有文件参数，不进行签名校验, pass :{}", requestURI);
+                    return true;
+                }
+            } catch (IOException | ServletException e) {
+                log.error("检查请求参数时发生错误: {}", e.getMessage(), e);
+            }
         }
         return false;
     }

@@ -73,26 +73,26 @@
 ## 2、签名校验流程
 
 1. 请求参数获取
-  CommonSignHandler.handle 方法调用 SignUtil.getAllParams 方法获取请求的所有参数。
-  SignUtil.getAllParams 方法从请求头和请求体中提取所有参数，并进行以下处理：
-  从请求头中获取 appKey 和 timestamp。
-  检查 timestamp 是否为空，如果为空则抛出异常。
-  检查 timestamp 是否超过5分钟，如果超过则抛出异常。
-  从请求URL中获取参数并解码。
-  如果请求方法不是GET，则从请求体中获取参数并解码。
-  将所有参数按键名排序并返回一个 SortedMap。
+    CommonSignHandler.handle 方法调用 SignUtil.getAllParams 方法获取请求的所有参数。
+    SignUtil.getAllParams 方法从请求头和请求体中提取所有参数，并进行以下处理：
+    从请求头中获取 appKey 和 timestamp。
+    检查 timestamp 是否为空，如果为空则抛出异常。
+    检查 timestamp 是否超过5分钟，如果超过则抛出异常。
+    从请求URL中获取参数并解码。
+    如果请求方法不是GET，则从请求体中获取参数并解码。
+    将所有参数按键名排序并返回一个 SortedMap。
 2. Nonce 校验
-  CommonSignHandler.handle 方法检查是否启用了 nonce 校验。
-  如果启用，从请求头中获取 nonce。
-  检查 nonce 是否为空，如果为空则抛出异常。
-  检查 nonce 是否已经存在于Redis中，如果存在则拒绝请求，否则将 nonce 存入Redis并设置过期时间为1分钟。
+    CommonSignHandler.handle 方法检查是否启用了 nonce 校验。
+    如果启用，从请求头中获取 nonce。
+    检查 nonce 是否为空，如果为空则抛出异常。
+    检查 nonce 是否已经存在于Redis中，如果存在则拒绝请求，否则将 nonce 存入Redis并设置过期时间为1分钟。
 3. 签名生成与校验
-  CommonSignHandler.handle 方法调用 buildSignature 方法生成签名。
-  buildSignature 方法将所有参数按键名排序，并将参数名和参数值连接成字符串。
-  在字符串的头部和尾部分别添加 appSecret。
-  使用MD5算法对字符串进行加密，并将结果转换为大写。
-  从请求头中获取 signature。
-  比较生成的签名和请求头中的签名是否一致，如果一致则校验通过，否则校验失败。
+    CommonSignHandler.handle 方法调用 buildSignature 方法生成签名。
+    buildSignature 方法将所有参数按键名排序，并将参数名和参数值连接成字符串。
+    在字符串的头部和尾部分别添加 appSecret。
+    使用MD5算法对字符串进行加密，并将结果转换为大写。
+    从请求头中获取 signature。
+    比较生成的签名和请求头中的签名是否一致，如果一致则校验通过，否则校验失败。
 
 ```Mermaid
 graph TD
@@ -123,14 +123,14 @@ graph TD
 ## 3、签名计算流程
 
 1. 参数排序
-  输入: 一个 SortedMap<String, Object> 类型的参数集合，其中键是参数名，值是参数值。
-  过程: SortedMap 会自动按键名进行排序。
+    输入: 一个 SortedMap<String, Object> 类型的参数集合，其中键是参数名，值是参数值。
+    过程: SortedMap 会自动按键名进行排序。
 2. 参数拼接
-  过程:
-  遍历排序后的参数集合，将每个参数的键和值连接成字符串，格式为 key=value。
-  将这些 key=value 字符串用 & 符号连接起来。
-  在拼接好的字符串最后添加 appSecret。
-  使用 MD5 算法对最终的字符串进行加密，并将结果转换为大写。
+    过程:
+    遍历排序后的参数集合，将每个参数的键和值连接成字符串，格式为 key=value。
+    将这些 key=value 字符串用 & 符号连接起来。
+    在拼接好的字符串最后添加 appSecret。
+    使用 MD5 算法对最终的字符串进行加密，并将结果转换为大写。
 
 
 
@@ -185,3 +185,12 @@ appKey=myAppKey&param1=value1&param2=value2&timestamp=1672531200&appSecret=mySec
 
 
 
+
+
+
+
+# Notice
+
+
+1. 对于文件参数， 如果请求仅包含文件， 没有其他正常参数， 忽略该请求的签名校验。 如果是既有文件参数和别的参数， 忽略文件参数， 按原有逻辑计算其他参数；
+// 2. 对common-component中的SpringSecurityConfig， 在对外提供的接口上添加了@AnonymousAccess后， 不仅不校验token了， 连签名也不校验了。 升级到1.1.0后将签名过滤器作为独立过滤器， 并将其放在第一位。

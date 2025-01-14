@@ -74,9 +74,11 @@ public class SignUtil {
             }
         } else {
             // 正常处理非 multipart/form-data 请求
-            Map<String, String> allRequestParam = getAllRequestParam(request);
-            if (allRequestParam != null) {
-                result.putAll(flattenParams(allRequestParam, ""));
+            if (!HttpMethod.GET.name().equals(request.getMethod())) {
+                Map<String, String> allRequestParam = getAllRequestParam(request);
+                if (allRequestParam != null) {
+                    result.putAll(flattenParams(allRequestParam, ""));
+                }
             }
         }
         return result;

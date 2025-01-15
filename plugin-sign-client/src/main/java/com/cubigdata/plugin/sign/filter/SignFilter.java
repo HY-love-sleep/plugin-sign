@@ -83,10 +83,10 @@ public class SignFilter extends OncePerRequestFilter {
             return true;
         }
         // 兼容common-components TokenFilter中的签名逻辑
-        if (isAppointAnnotated(request)) {
-            log.info("该接口被 @Appoint 注解修饰, sign pass :{}", requestURI);
-            return true;
-        }
+        // if (isAppointAnnotated(request)) {
+        //     log.info("该接口被 @Appoint 注解修饰, sign pass :{}", requestURI);
+        //     return true;
+        // }
         // 检查请求内容类型是否为 multipart/form-data
         String contentType = request.getContentType();
         if (contentType != null && contentType.startsWith("multipart/form-data")) {

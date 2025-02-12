@@ -16,4 +16,5 @@ public class SignProperties {
     // 默认不校验签名
     private Boolean enabled = false;
     private List<String> uris = Lists.newArrayList();
+    private List<String> signUris = Lists.newArrayList();
 }

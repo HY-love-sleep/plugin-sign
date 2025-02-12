@@ -64,6 +64,14 @@ public class SignFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        String contextPath = null;
+
+        Boolean mustSign = UriMatcher.match(contextPath, requestURI, signProperties.getSignUris()); // 该列表下的接口强制校验签名
+        if (mustSign) {
+            log.info("对外提供接口， 进行签名校验");
+            return false;
+        }
         if (!signProperties.getEnabled()) {
             log.info("sign filter is not enabled");
             return true;
@@ -72,21 +80,16 @@ public class SignFilter extends OncePerRequestFilter {
             log.info("sign uri not configured");
             return false;
         }
-        String requestURI = request.getRequestURI();
-        String contextPath = null;
+
         if (null != serverProperties) {
             contextPath = serverProperties.getServlet().getContextPath();
         }
-        Boolean match = UriMatcher.match(contextPath, requestURI, signProperties.getUris());
+        Boolean match = UriMatcher.match(contextPath, requestURI, signProperties.getUris()); // 白名单
+
         if (match) {
             log.info("该接口设置为不经过签名校验, pass :{}", requestURI);
             return true;
         }
-        // 兼容common-components TokenFilter中的签名逻辑
-        // if (isAppointAnnotated(request)) {
-        //     log.info("该接口被 @Appoint 注解修饰, sign pass :{}", requestURI);
-        //     return true;
-        // }
         // 检查请求内容类型是否为 multipart/form-data
         String contentType = request.getContentType();
         if (contentType != null && contentType.startsWith("multipart/form-data")) {

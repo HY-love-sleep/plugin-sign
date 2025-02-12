@@ -54,7 +54,7 @@ public class SignConfig implements InitializingBean {
     private NacosConfigHelper nacosConfigUtil;
 
     @Bean
-    @ConditionalOnProperty(prefix = "sign", name = "enabled", havingValue = "true")
+    // @ConditionalOnProperty(prefix = "sign", name = "enabled", havingValue = "true")
     public SignFilter signFilter() {
         return new SignFilter(redisTemplate, signHttp, signProperties, serverProperties, applicationContext, nacosConfigUtil);
     }
